@@ -1,0 +1,81 @@
+﻿heat_template_version: 2017-02-24
+description: Simple template to deploy a single compute instance
+parameters:
+  net:
+    description: the network named LSY-network 192.168.2.0/24
+    type: string
+    default: LSY-network
+resources:
+
+  web_secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      rules:
+        - protocol: tcp
+          remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 22
+          port_range_max: 22
+        - protocol: ICMP
+          remote_ip_prefix: 0.0.0.0/0
+
+  instance_port_1:
+    type: OS::Neutron::Port
+    properties:
+      network:
+        get_param: net
+      security_groups:
+        - default
+        - get_resource: web_secgroup
+  instance_port_2:
+    type: OS::Neutron::Port
+    properties:
+      network:
+        get_param: net
+      security_groups:
+        - default
+        - get_resource: web_secgroup
+          
+  instance_1:
+    type: OS::Nova::Server
+    properties:
+      image: ubuntu_LSY
+      flavor: default
+      key_name: LSY-SSH
+      networks:
+        - port:
+            get_resource: instance_port_1
+  instance_2:
+    type: OS::Nova::Server
+    properties:
+      image: ubuntu_LSY
+      flavor: default
+      key_name: LSY-SSH
+      networks:
+        - port:
+            get_resource: instance_port_2
+
+  floating_ip_1:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+  floating_ip_2:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+
+  association_1:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id:
+        get_resource: floating_ip_1
+      port_id:
+        get_resource: instance_port_1
+  association_2:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id:
+        get_resource: floating_ip_2
+      port_id:
+        get_resource: instance_port_2
+          
+

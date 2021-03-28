@@ -1,0 +1,19 @@
+﻿description: Simple template to deploy a single compute instance
+heat_template_version: '2017-02-24'
+
+resources:
+  my_instance:
+    properties:
+      flavor: default
+      image: ubuntu_LSY
+      key_name: LSY-SSH
+      networks: 
+      - network: LSY-network
+    type: OS::Nova::Server
+outputs:
+  instance_ip:
+    description: ip address of the deployed compute instance
+    value:
+      get_attr:
+        - my_instance
+        - first_address
